@@ -30,6 +30,12 @@
 			<groupId>cz.vutbr.fit.layout</groupId>
 			<artifactId>layout-tools</artifactId>
 			<version>0.0.3-SNAPSHOT</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>layout-classify</artifactId>
+					<groupId>cz.vutbr.fit.layout</groupId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<!-- <dependency>
 			<groupId>cz.vutbr.fit.layout</groupId>
