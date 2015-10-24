@@ -9,7 +9,8 @@ proc.apply('FitLayout.Segm.SortByLines', {});
 //proc.apply('Ceur.Tag.Class', {});
 //proc.apply('FitLayout.Segm.HomogeneousLeaves', {});
 proc.apply('FitLayout.Segm.SuperAreas', {depthLimit: 1});
-proc.apply('FitLayout.Pdf.RemapSeparators', { });
+proc.apply('FitLayout.Pdf.NormalizeSeparators', { });
+//proc.apply('FitLayout.Pdf.RemapSeparators', { });
 
 //proc.apply('FitLayout.Tag.Entities', {});
 //proc.apply('FitLayout.Tag.Visual', {trainFile: "res:eswc_train.arff", classIndex: 0});
