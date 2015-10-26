@@ -13,6 +13,7 @@ import java.util.Vector;
 import org.fit.layout.impl.BaseOperator;
 import org.fit.layout.model.Area;
 import org.fit.layout.model.AreaTree;
+import org.fit.layout.model.Rectangular;
 
 /**
  * 
@@ -69,6 +70,7 @@ public class NormalizeSeparatorsOperator extends BaseOperator
     public void apply(AreaTree atree, Area root)
     {
         recursiveJoinSeparators(root);
+        recursiveSplitCrossingSeparators(root);
     }
     
     //==============================================================================
@@ -167,4 +169,100 @@ public class NormalizeSeparatorsOperator extends BaseOperator
             return false;
     }
 
+    //==============================================================================
+    
+    private void recursiveSplitCrossingSeparators(Area root)
+    {
+        List<Area> hseps = findSeparatos(root, true);
+        List<Area> vseps = findSeparatos(root, false);
+        
+        boolean change = false;
+        while (!hseps.isEmpty() && !vseps.isEmpty())
+        {
+            Area hsep = hseps.get(0);
+            Area vsep = null;
+            for (Area cand : vseps)
+            {
+                if (separatorsCross(hsep, cand)
+                        && (splits(hsep, cand) || splits(cand, hsep)))
+                {
+                    vsep = cand;
+                    break;
+                }
+            }
+            if (vsep != null)
+            {
+                if (vsep.toString().contains("163") && hsep.toString().contains("2015"))
+                    System.out.println("jo!");
+                final boolean splitHsep = splits(hsep, vsep); 
+                final boolean splitVsep = splits(vsep, hsep);
+                final Rectangular hb = new Rectangular(hsep.getBounds()); 
+                final Rectangular vb = new Rectangular(vsep.getBounds()); 
+                
+                if (splitHsep)
+                {
+                    Area nsep = hsep.copy();
+                    hsep.getBounds().setX2(vb.getX2());
+                    nsep.getBounds().setX1(vb.getX2() + 1);
+                    hseps.add(1, nsep);
+                    change = true;
+                }
+                if (splitVsep)
+                {
+                    Area nsep = vsep.copy();
+                    vsep.getBounds().setY2(hb.getY2());
+                    nsep.getBounds().setY1(hb.getY2() + 1);
+                    vseps.add(1, nsep);
+                    change = true;
+                }
+            }
+            else
+                hseps.remove(0); //does not cross with anything, remove it
+        }
+        
+        if (change)
+            root.updateTopologies();
+        
+        for (int i = 0; i < root.getChildCount(); i++)
+            recursiveSplitCrossingSeparators(root.getChildArea(i));
+    }
+
+    private boolean separatorsCross(Area hsep, Area vsep)
+    {
+        Rectangular hb1 = hsep.getBounds();
+        Rectangular hb2 = new Rectangular(hb1);
+        if (hb2.getX1() > 0) hb2.setX1(hb2.getX1() - 1);
+        hb2.setX2(hb2.getX2() + 1);
+        Rectangular vb1 = vsep.getBounds();
+        Rectangular vb2 = new Rectangular(vb1);
+        if (vb2.getY1() > 0) vb2.setY1(vb2.getY1() - 1);
+        vb2.setY2(vb2.getY2() + 1);
+        
+        return (hb1.intersects(vb2) || vb1.intersects(hb2));
+    }
+    
+    /**
+     * Checks if the splitter divides the subject in two parts.
+     * @param subject
+     * @param splitter
+     * @return
+     */
+    private boolean splits(Area subject, Area splitter)
+    {
+        if (subject.isHorizontalSeparator())
+        {
+            int l1 = splitter.getX1() - subject.getX1();
+            int l2 = subject.getX2() - splitter.getX2();
+            return (l1 > 0 && l2 > 0);
+        }
+        else if (subject.isVerticalSeparator())
+        {
+            int l1 = splitter.getY1() - subject.getY1();
+            int l2 = subject.getY2() - splitter.getY2();
+            return (l1 > 0 && l2 > 0);
+        }
+        else
+            return false;
+    }
+    
 }
