@@ -5,6 +5,7 @@
  */
 package org.fit.pdf.op;
 
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -17,7 +18,6 @@ import org.fit.layout.model.Area;
 import org.fit.layout.model.AreaTree;
 import org.fit.segm.grouping.AreaImpl;
 
-import edu.emory.mathcs.backport.java.util.Collections;
 
 /**
  * 
