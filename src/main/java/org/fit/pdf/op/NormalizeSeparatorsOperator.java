@@ -71,6 +71,7 @@ public class NormalizeSeparatorsOperator extends BaseOperator
     {
         recursiveJoinSeparators(root);
         recursiveSplitCrossingSeparators(root);
+        atree.updateTopologies();
     }
     
     //==============================================================================
