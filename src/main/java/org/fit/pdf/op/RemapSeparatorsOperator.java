@@ -15,7 +15,14 @@ import org.fit.layout.impl.AreaGrid;
 import org.fit.layout.impl.BaseOperator;
 import org.fit.layout.model.Area;
 import org.fit.layout.model.AreaTree;
+import org.fit.layout.model.Border;
+import org.fit.layout.model.Box;
+import org.fit.layout.model.Rectangular;
+import org.fit.layout.model.Border.Side;
+import org.fit.pdf.PdfArea;
 import org.fit.segm.grouping.AreaImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.emory.mathcs.backport.java.util.Collections;
 
@@ -25,6 +32,8 @@ import edu.emory.mathcs.backport.java.util.Collections;
  */
 public class RemapSeparatorsOperator extends BaseOperator
 {
+    private static Logger log = LoggerFactory.getLogger(RemapSeparatorsOperator.class);
+    
     protected final String[] paramNames = { };
     protected final ValueType[] paramTypes = { };
     
@@ -220,6 +229,7 @@ public class RemapSeparatorsOperator extends BaseOperator
                     {
                         System.out.println("  Uncovered Y: " + max + ".." + next);
                     }
+                    coverVerticalSeparator(sep, a);
                     if (max < a.getY2())
                         max = a.getY2();
                 }
@@ -234,6 +244,7 @@ public class RemapSeparatorsOperator extends BaseOperator
                     {
                         System.out.println("  Uncovered X: " + max + ".." + next);
                     }
+                    coverHorizontalSeparator(sep, a);
                     if (max < a.getX2())
                         max = a.getX2();
                 }
@@ -242,6 +253,134 @@ public class RemapSeparatorsOperator extends BaseOperator
         }
         else
             System.out.println("  NOT covered at all");
+    }
+    
+    private void coverVerticalSeparator(Area sep, Area a)
+    {
+        if (a.getParentArea() != null)
+        {
+            final Rectangular sgp = sep.getBounds();
+            if (a.getX1() >= sgp.getX1())
+            {
+                PdfArea parea;
+                if (a.getParentArea() instanceof PdfArea && mayShareY(a.getParentArea(), a))
+                {
+                    parea = (PdfArea) a.getParentArea();
+                    parea.getBounds().setX1(sgp.getX1());
+                }
+                else
+                {
+                    Rectangular newgp = new Rectangular(a.getBounds());
+                    newgp.setX1(sgp.getX1());
+                    parea = new PdfArea(newgp);
+                    a.getParentArea().insertParent(parea, a);
+                }
+                parea.setLeftBorder(sgp.getWidth());
+                parea.setBorderStyle(Border.Side.LEFT, getSeparatorStyle(sep));
+            }
+            else
+            {
+                PdfArea parea;
+                if (a.getParentArea() instanceof PdfArea && mayShareY(a.getParentArea(), a))
+                {
+                    parea = (PdfArea) a.getParentArea();
+                    parea.getBounds().setX2(sgp.getX2());
+                }
+                else
+                {
+                    Rectangular newgp = new Rectangular(a.getBounds());
+                    newgp.setX2(sgp.getX2());
+                    parea = new PdfArea(newgp);
+                    a.getParentArea().insertParent(parea, a);
+                }
+                parea.setRightBorder(sgp.getWidth());
+                parea.setBorderStyle(Border.Side.RIGHT, getSeparatorStyle(sep));
+            }
+        }
+    }
+    
+    private void coverHorizontalSeparator(Area sep, Area a)
+    {
+        if (a.getParentArea() != null)
+        {
+            final Rectangular sgp = sep.getBounds();
+            if (a.getY1() >= sgp.getY1())
+            {
+                PdfArea parea;
+                if (a.getParentArea() instanceof PdfArea && mayShareX(a.getParentArea(), a))
+                {
+                    parea = (PdfArea) a.getParentArea();
+                    parea.getBounds().setY1(sgp.getY1());
+                }
+                else
+                {
+                    Rectangular newgp = new Rectangular(a.getBounds());
+                    newgp.setY1(sgp.getY1());
+                    parea = new PdfArea(newgp);
+                    a.getParentArea().insertParent(parea, a);
+                }
+                parea.setTopBorder(sgp.getHeight());
+                parea.setBorderStyle(Border.Side.TOP, getSeparatorStyle(sep));
+            }
+            else
+            {
+                PdfArea parea;
+                if (a.getParentArea() instanceof PdfArea && mayShareX(a.getParentArea(), a))
+                {
+                    parea = (PdfArea) a.getParentArea();
+                    parea.getBounds().setY2(sgp.getY2());
+                }
+                else
+                {
+                    Rectangular newgp = new Rectangular(a.getBounds());
+                    newgp.setY2(sgp.getY2());
+                    parea = new PdfArea(newgp);
+                    a.getParentArea().insertParent(parea, a);
+                }
+                parea.setBottomBorder(sgp.getHeight());
+                parea.setBorderStyle(Border.Side.BOTTOM, getSeparatorStyle(sep));
+            }
+        }
+    }
+    
+    private Border getSeparatorStyle(Area sep)
+    {
+        final Vector<Box> boxes = sep.getBoxes();
+        if (boxes.size() == 1)
+        {
+            final Box sbox = boxes.firstElement();
+            if (sep.isVerticalSeparator())
+            {
+                Border ret = sbox.getBorderStyle(Side.LEFT);
+                if (ret == null || ret.getStyle() == Border.Style.NONE)
+                    ret = sbox.getBorderStyle(Side.RIGHT);
+                return ret;
+            }
+            else
+            {
+                Border ret = sbox.getBorderStyle(Side.TOP);
+                if (ret == null || ret.getStyle() == Border.Style.NONE)
+                    ret = sbox.getBorderStyle(Side.BOTTOM);
+                return ret;
+            }
+        }
+        else
+        {
+            log.warn("getSeparatorColor(): Found a separator with strange number of boxes: {}", sep);
+            return null;
+        }
+    }
+    
+    private boolean mayShareX(Area a1, Area a2)
+    {
+        //return a1.getX1() == a2.getX1() && a1.getX2() == a2.getX2();
+        return a1.getBounds().intersects(a2.getBounds());
+    }
+    
+    private boolean mayShareY(Area a1, Area a2)
+    {
+        //return a1.getY1() == a2.getY1() && a1.getY2() == a2.getY2();
+        return a1.getBounds().intersects(a2.getBounds());
     }
     
     private void sortCoverings()
