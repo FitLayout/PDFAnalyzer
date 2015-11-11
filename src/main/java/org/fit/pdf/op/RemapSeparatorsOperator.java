@@ -117,6 +117,7 @@ public class RemapSeparatorsOperator extends BaseOperator
         sortCoverings();
         for (Area sep : covering.keySet())
             checkCovering(sep);
+        atree.updateTopologies();
     }
     
     //==============================================================================
