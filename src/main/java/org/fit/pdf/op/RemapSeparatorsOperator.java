@@ -34,13 +34,16 @@ public class RemapSeparatorsOperator extends BaseOperator
 {
     private static Logger log = LoggerFactory.getLogger(RemapSeparatorsOperator.class);
     
-    protected final String[] paramNames = { };
-    protected final ValueType[] paramTypes = { };
+    protected final String[] paramNames = { "maxEmDistX", "maxEmDistY" };
+    protected final ValueType[] paramTypes = { ValueType.FLOAT, ValueType.FLOAT };
     
     private final static short TOP = 0;
     private final static short RIGHT = 1;
     private final static short BOTTOM = 2;
     private final static short LEFT = 3;
+    
+    private float maxEmDistX = 1.5f;
+    private float maxEmDistY = 1.0f;
     
     private Map<Area, List<Area>> covering;
     
@@ -79,6 +82,26 @@ public class RemapSeparatorsOperator extends BaseOperator
         return paramTypes;
     }
     
+    public float getMaxEmDistX()
+    {
+        return maxEmDistX;
+    }
+
+    public void setMaxEmDistX(float maxEmDistX)
+    {
+        this.maxEmDistX = maxEmDistX;
+    }
+
+    public float getMaxEmDistY()
+    {
+        return maxEmDistY;
+    }
+
+    public void setMaxEmDistY(float maxEmDistY)
+    {
+        this.maxEmDistY = maxEmDistY;
+    }
+
     //==============================================================================
 
     @Override
@@ -134,10 +157,14 @@ public class RemapSeparatorsOperator extends BaseOperator
     private Area findNeigborLeft(AreaImpl area)
     {
         final AreaGrid grid = ((AreaImpl) area.getParentArea()).getGrid();
+        final int spos = grid.getColOfs(area.getGridPosition().getX1());
         int y = area.getGridPosition().midY();
         int x = area.getGridPosition().getX1() - 1;
         while (x >= 0)
         {
+            final int epos = grid.getColOfs(x);
+            if (spos - epos > maxEmDistX * area.getFontSize())
+                break; //distance limit exceeded
             final Area cand = grid.getAreaAt(x, y);
             if (cand != null)
                 return cand;
@@ -149,10 +176,14 @@ public class RemapSeparatorsOperator extends BaseOperator
     private Area findNeigborRight(AreaImpl area)
     {
         final AreaGrid grid = ((AreaImpl) area.getParentArea()).getGrid();
+        final int spos = grid.getColOfs(area.getGridPosition().getX2());
         int y = area.getGridPosition().midY();
         int x = area.getGridPosition().getX2() + 1;
         while (x < grid.getWidth())
         {
+            final int epos = grid.getColOfs(x);
+            if (epos - spos > maxEmDistX * area.getFontSize())
+                break; //distance limit exceeded
             final Area cand = grid.getAreaAt(x, y);
             if (cand != null)
                 return cand;
@@ -164,10 +195,14 @@ public class RemapSeparatorsOperator extends BaseOperator
     private Area findNeigborTop(AreaImpl area)
     {
         final AreaGrid grid = ((AreaImpl) area.getParentArea()).getGrid();
+        final int spos = grid.getRowOfs(area.getGridPosition().getY1());
         int x = area.getGridPosition().midX();
         int y = area.getGridPosition().getY1() - 1;
         while (y >= 0)
         {
+            final int epos = grid.getRowOfs(y);
+            if (spos - epos > maxEmDistY * area.getFontSize())
+                break; //distance limit exceeded
             final Area cand = grid.getAreaAt(x, y);
             if (cand != null)
                 return cand;
@@ -179,10 +214,14 @@ public class RemapSeparatorsOperator extends BaseOperator
     private Area findNeigborBottom(AreaImpl area)
     {
         final AreaGrid grid = ((AreaImpl) area.getParentArea()).getGrid();
+        final int spos = grid.getRowOfs(area.getGridPosition().getY2());
         int x = area.getGridPosition().midX();
         int y = area.getGridPosition().getY2() + 1;
         while (y < grid.getHeight())
         {
+            final int epos = grid.getRowOfs(y);
+            if (epos - spos > maxEmDistY * area.getFontSize())
+                break; //distance limit exceeded
             final Area cand = grid.getAreaAt(x, y);
             if (cand != null)
                 return cand;
