@@ -154,10 +154,7 @@ public class SeparatorPairsOperator extends BaseOperator
                 {
                     final Rectangular sgp1 = pair.s1.getTopology().getPosition();
                     final Rectangular sgp2 = pair.s2.getTopology().getPosition();
-                    //maximal area given by the separatos (when not aligned)
-                    Rectangular maxgp = new Rectangular(sgp1);
-                    maxgp.expandToEnclose(sgp2);
-                    //minimal area
+                    //minimal area given by the separatos (when not aligned)
                     Rectangular mingp = new Rectangular(Math.max(sgp1.getX1(), sgp2.getX1()), sgp1.getY1(),
                                                         Math.min(sgp1.getX2(), sgp2.getX2()), sgp2.getY2());
                     //find the areas inside
@@ -167,7 +164,7 @@ public class SeparatorPairsOperator extends BaseOperator
                     {
                         final Area child = parent.getChildArea(i);
                         final Rectangular cgp = child.getTopology().getPosition(); 
-                        if (mingp.intersects(cgp) && maxgp.encloses(cgp) && !child.isSeparator())
+                        if (isBetweenSeparators(mingp, cgp) && !child.isSeparator())
                         {
                             selected.add(child);
                             if (selgp == null)
@@ -190,6 +187,21 @@ public class SeparatorPairsOperator extends BaseOperator
             return a1.getParentArea();
         else
             return null;
+    }
+    
+    private boolean isBetweenSeparators(Rectangular mingp, Rectangular childgp)
+    {
+        if (mingp.encloses(childgp))
+        {
+            //child entirely between separators
+            return true;
+        }
+        else
+        {
+            //at least half of the child between separators
+            Rectangular intr = mingp.intersection(childgp);
+            return (intr.getArea() > childgp.getArea() / 2);
+        }
     }
     
     //==============================================================================
