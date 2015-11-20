@@ -72,9 +72,9 @@ public class SeparatorPairsOperator extends BaseOperator
     public void apply(AreaTree atree, Area root)
     {
         List<SepPair> pairs = findSeparatorPairs(root);
-        System.out.println("Sep pairs:");
+        /*System.out.println("Sep pairs:");
         for (SepPair pair : pairs)
-            System.out.println("  " + pair);
+            System.out.println("  " + pair);*/
         /*System.out.println("Incomplete:");
         for (SepPair pair : pairs)
             if (!pair.isComplete())
@@ -147,33 +147,44 @@ public class SeparatorPairsOperator extends BaseOperator
         for (SepPair pair : pairs)
         {
             //scan the horizontal separators
-            if (pair.isComplete() && !pair.isVertical())
+            if (pair.isComplete() && pair.isHorizontal())
             {
                 Area parent = findCommonParent(pair.s1, pair.s2);
                 if (parent != null)
                 {
-                    final Rectangular sgp1 = pair.s1.getTopology().getPosition();
-                    final Rectangular sgp2 = pair.s2.getTopology().getPosition();
                     //minimal area given by the separatos (when not aligned)
-                    Rectangular mingp = new Rectangular(Math.max(sgp1.getX1(), sgp2.getX1()), sgp1.getY1(),
-                                                        Math.min(sgp1.getX2(), sgp2.getX2()), sgp2.getY2());
+                    Rectangular areagp = pair.getMinAreaGP();
+                    Rectangular areabounds = pair.getMinArea();
+                    //check for a matching vertical pair
+                    SepPair vpair = findMatchingVerticalPair(pairs, pair);
+                    if (vpair != null)
+                    {
+                        final Rectangular vgp = vpair.getMinAreaGP();
+                        if (vgp.getX1() > areagp.getX1())
+                            areagp.setX1(vgp.getX1());
+                        if (vgp.getX2() < areagp.getX2())
+                            areagp.setX2(vgp.getX2());
+                        
+                        final Rectangular vbounds = vpair.getMinArea();
+                        if (vbounds.getX1() > areabounds.getX1())
+                            areabounds.setX1(vbounds.getX1());
+                        if (vbounds.getX2() < areabounds.getX2())
+                            areabounds.setX2(vbounds.getX2());
+                    }
                     //find the areas inside
-                    Rectangular selgp = new Rectangular(mingp);
                     Vector<Area> selected = new Vector<Area>();
                     for (int i = 0; i < parent.getChildCount(); i++)
                     {
                         final Area child = parent.getChildArea(i);
-                        final Rectangular cgp = child.getTopology().getPosition(); 
-                        if (isBetweenSeparators(mingp, cgp) && !child.isSeparator())
+                        final Rectangular cbounds = child.getBounds(); 
+                        if (isBetweenSeparators(areabounds, cbounds) && !child.isSeparator())
                         {
                             selected.add(child);
-                            if (selgp == null)
-                                selgp = new Rectangular(cgp);
-                            else
-                                selgp.expandToEnclose(cgp);
+                            //crop the child to the area bounds
+                            cbounds.copy(cbounds.intersection(areabounds));
                         }
                     }
-                    parent.createSuperArea(selgp, selected, "seps");
+                    parent.createSuperArea(areagp, selected, "seps");
                 }
                 else
                     log.error("Separator pair {} has no common parent", pair);
@@ -189,9 +200,9 @@ public class SeparatorPairsOperator extends BaseOperator
             return null;
     }
     
-    private boolean isBetweenSeparators(Rectangular mingp, Rectangular childgp)
+    private boolean isBetweenSeparators(Rectangular sepBounds, Rectangular childBounds)
     {
-        if (mingp.encloses(childgp))
+        if (sepBounds.encloses(childBounds))
         {
             //child entirely between separators
             return true;
@@ -199,9 +210,41 @@ public class SeparatorPairsOperator extends BaseOperator
         else
         {
             //at least half of the child between separators
-            Rectangular intr = mingp.intersection(childgp);
-            return (intr.getArea() > childgp.getArea() / 2);
+            Rectangular intr = sepBounds.intersection(childBounds);
+            return (intr.getArea() > childBounds.getArea() / 2);
         }
+    }
+    
+    private SepPair findMatchingVerticalPair(List<SepPair> pairs, SepPair hpair)
+    {
+        final Rectangular hgp = hpair.getMinArea();
+        //find the pair with the largest overlapping area
+        SepPair cand = null;
+        int candarea = 0;
+        for (SepPair vpair : pairs)
+        {
+            if (vpair.isComplete() && vpair.isVertical())
+            {
+                final Rectangular vgp = vpair.getMinArea();
+                if (vgp.intersects(hgp))
+                {
+                    Rectangular common = vgp.intersection(hgp);
+                    if (common.getArea() > candarea)
+                    {
+                        cand = vpair;
+                        candarea = common.getArea();
+                    }
+                }
+            }
+        }
+        //do not consider the match when the overlapping area is to small
+        if (cand != null)
+        {
+            float ratio = (float) candarea / hgp.getArea();
+            if (ratio < 0.8f)
+                cand = null;
+        }
+        return cand;
     }
     
     //==============================================================================
@@ -236,6 +279,11 @@ public class SeparatorPairsOperator extends BaseOperator
             return s1.isVerticalSeparator();
         }
         
+        public boolean isHorizontal()
+        {
+            return s1.isHorizontalSeparator();
+        }
+        
         public boolean allowsPair(Area cand)
         {
             if (s1.isHorizontalSeparator() && cand.isHorizontalSeparator())
@@ -264,6 +312,40 @@ public class SeparatorPairsOperator extends BaseOperator
             }
             else
                 return -1;
+        }
+        
+        /**
+         * Obtains the grid position of the area between the separators.
+         * When the separators are not aligned, the minimal area is returned determined by the seam length.
+         * @return
+         */
+        public Rectangular getMinAreaGP()
+        {
+            final Rectangular sgp1 = s1.getTopology().getPosition();
+            final Rectangular sgp2 = s2.getTopology().getPosition();
+            if (s1.isHorizontalSeparator())
+                return new Rectangular(Math.max(sgp1.getX1(), sgp2.getX1()), sgp1.getY2() + 1,
+                                       Math.min(sgp1.getX2(), sgp2.getX2()), sgp2.getY1() - 1);
+            else
+                return new Rectangular(sgp1.getX2() + 1, Math.max(sgp1.getY1(), sgp2.getY1()),
+                                       sgp2.getX1() - 1, Math.min(sgp1.getY2(), sgp2.getY2()));
+        }
+        
+        /**
+         * Obtains the absolute position of the area between the separators.
+         * When the separators are not aligned, the minimal area is returned determined by the seam length.
+         * @return
+         */
+        public Rectangular getMinArea()
+        {
+            final Rectangular sgp1 = s1.getBounds();
+            final Rectangular sgp2 = s2.getBounds();
+            if (s1.isHorizontalSeparator())
+                return new Rectangular(Math.max(sgp1.getX1(), sgp2.getX1()), sgp1.getY2() + 1,
+                                       Math.min(sgp1.getX2(), sgp2.getX2()), sgp2.getY1() - 1);
+            else
+                return new Rectangular(sgp1.getX2() + 1, Math.max(sgp1.getY1(), sgp2.getY1()),
+                                       sgp2.getX1() - 1, Math.min(sgp1.getY2(), sgp2.getY2()));
         }
         
         @Override
