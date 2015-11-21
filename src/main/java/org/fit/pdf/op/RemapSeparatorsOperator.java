@@ -138,19 +138,22 @@ public class RemapSeparatorsOperator extends BaseOperator
     {
         Neighborhood ret = new Neighborhood(area);
         
+        if (area.getId() == 1279)
+            System.out.println("hi!");
+        
         Area cand;
         cand = findNeigborTop(area);
         if (cand != null && cand.isHorizontalSeparator())
             ret.neighbors[TOP] = cand;
         cand = findNeigborRight(area);
         if (cand != null && cand.isVerticalSeparator())
-            ret.neighbors[LEFT] = cand;
+            ret.neighbors[RIGHT] = cand;
         cand = findNeigborBottom(area);
         if (cand != null && cand.isHorizontalSeparator())
             ret.neighbors[BOTTOM] = cand;
         cand = findNeigborLeft(area);
         if (cand != null && cand.isVerticalSeparator())
-            ret.neighbors[RIGHT] = cand;
+            ret.neighbors[LEFT] = cand;
         
         return ret;
     }
@@ -177,9 +180,9 @@ public class RemapSeparatorsOperator extends BaseOperator
     private Area findNeigborRight(AreaImpl area)
     {
         final AreaGrid grid = ((AreaImpl) area.getParentArea()).getGrid();
-        final int spos = grid.getColOfs(area.getGridPosition().getX2());
         int y = area.getGridPosition().midY();
         int x = area.getGridPosition().getX2() + 1;
+        final int spos = grid.getColOfs(x);
         while (x < grid.getWidth())
         {
             final int epos = grid.getColOfs(x);
@@ -215,9 +218,9 @@ public class RemapSeparatorsOperator extends BaseOperator
     private Area findNeigborBottom(AreaImpl area)
     {
         final AreaGrid grid = ((AreaImpl) area.getParentArea()).getGrid();
-        final int spos = grid.getRowOfs(area.getGridPosition().getY2());
         int x = area.getGridPosition().midX();
         int y = area.getGridPosition().getY2() + 1;
+        final int spos = grid.getRowOfs(y);
         while (y < grid.getHeight())
         {
             final int epos = grid.getRowOfs(y);
