@@ -34,16 +34,20 @@ public class RemapSeparatorsOperator extends BaseOperator
 {
     private static Logger log = LoggerFactory.getLogger(RemapSeparatorsOperator.class);
     
-    protected final String[] paramNames = { "maxEmDistX", "maxEmDistY" };
-    protected final ValueType[] paramTypes = { ValueType.FLOAT, ValueType.FLOAT };
+    protected final String[] paramNames = { "maxEmDistX", "maxEmDistY", "removeMapped" };
+    protected final ValueType[] paramTypes = { ValueType.FLOAT, ValueType.FLOAT, ValueType.BOOLEAN };
     
     private final static short TOP = 0;
     private final static short RIGHT = 1;
     private final static short BOTTOM = 2;
     private final static short LEFT = 3;
     
+    /** Maximal total uncovered length of the separator that allows removing the separator */
+    private final static int ALLOW_UNCOVERED = 2;
+    
     private float maxEmDistX = 1.5f;
     private float maxEmDistY = 1.0f;
+    private boolean removeMapped = true;
     
     private Map<Area, List<Area>> covering;
     
@@ -102,6 +106,16 @@ public class RemapSeparatorsOperator extends BaseOperator
         this.maxEmDistY = maxEmDistY;
     }
 
+    public boolean getRemoveMapped()
+    {
+        return removeMapped;
+    }
+
+    public void setRemoveMapped(boolean removeMapped)
+    {
+        this.removeMapped = removeMapped;
+    }
+
     //==============================================================================
 
     @Override
@@ -116,7 +130,11 @@ public class RemapSeparatorsOperator extends BaseOperator
         recursiveMapSeparators((AreaImpl) root);
         sortCoverings();
         for (Area sep : covering.keySet())
-            checkCovering(sep);
+        {
+            boolean covered = checkCovering(sep);
+            if (covered && removeMapped)
+                removeSeparator(sep);
+        }
         atree.updateTopologies();
     }
     
@@ -137,9 +155,6 @@ public class RemapSeparatorsOperator extends BaseOperator
     private Neighborhood findSeparatorsAround(AreaImpl area)
     {
         Neighborhood ret = new Neighborhood(area);
-        
-        if (area.getId() == 1279)
-            System.out.println("hi!");
         
         Area cand;
         cand = findNeigborTop(area);
@@ -167,7 +182,7 @@ public class RemapSeparatorsOperator extends BaseOperator
         while (x >= 0)
         {
             final int epos = grid.getColOfs(x);
-            if (spos - epos > maxEmDistX * area.getFontSize())
+            if (spos - epos > maxEmDistX * areaFontSize(area))
                 break; //distance limit exceeded
             final Area cand = grid.getAreaAt(x, y);
             if (cand != null)
@@ -186,7 +201,7 @@ public class RemapSeparatorsOperator extends BaseOperator
         while (x < grid.getWidth())
         {
             final int epos = grid.getColOfs(x);
-            if (epos - spos > maxEmDistX * area.getFontSize())
+            if (epos - spos > maxEmDistX * areaFontSize(area))
                 break; //distance limit exceeded
             final Area cand = grid.getAreaAt(x, y);
             if (cand != null)
@@ -205,7 +220,7 @@ public class RemapSeparatorsOperator extends BaseOperator
         while (y >= 0)
         {
             final int epos = grid.getRowOfs(y);
-            if (spos - epos > maxEmDistY * area.getFontSize())
+            if (spos - epos > maxEmDistY * areaFontSize(area))
                 break; //distance limit exceeded
             final Area cand = grid.getAreaAt(x, y);
             if (cand != null)
@@ -224,7 +239,7 @@ public class RemapSeparatorsOperator extends BaseOperator
         while (y < grid.getHeight())
         {
             final int epos = grid.getRowOfs(y);
-            if (epos - spos > maxEmDistY * area.getFontSize())
+            if (epos - spos > maxEmDistY * areaFontSize(area))
                 break; //distance limit exceeded
             final Area cand = grid.getAreaAt(x, y);
             if (cand != null)
@@ -254,14 +269,27 @@ public class RemapSeparatorsOperator extends BaseOperator
         }
     }
     
+    private float areaFontSize(Area area)
+    {
+        Area cur = area;
+        float ret = cur.getFontSize();
+        while (ret == 0.0f && cur.getParentArea() != null)
+        {
+            cur = cur.getParentArea();
+            ret = cur.getFontSize();
+        }
+        return ret;
+    }
+    
     //==============================================================================
     
-    private void checkCovering(Area sep)
+    private boolean checkCovering(Area sep)
     {
         System.out.println("SEPARATOR " + sep);
         List<Area> areas = covering.get(sep);
         if (areas != null && !areas.isEmpty())
         {
+            int uncover = 0;
             if (sep.isVerticalSeparator())
             {
                 int max = sep.getY1();
@@ -271,6 +299,7 @@ public class RemapSeparatorsOperator extends BaseOperator
                     if (next > max)
                     {
                         System.out.println("  Uncovered Y: " + max + ".." + next);
+                        uncover += next - max;
                     }
                     coverVerticalSeparator(sep, a);
                     if (max < a.getY2())
@@ -286,16 +315,20 @@ public class RemapSeparatorsOperator extends BaseOperator
                     if (next > max)
                     {
                         System.out.println("  Uncovered X: " + max + ".." + next);
+                        uncover += next - max;
                     }
                     coverHorizontalSeparator(sep, a);
                     if (max < a.getX2())
                         max = a.getX2();
                 }
             }
-            
+            return (uncover <= ALLOW_UNCOVERED);
         }
         else
+        {
             System.out.println("  NOT covered at all");
+            return false; 
+        }
     }
     
     private void coverVerticalSeparator(Area sep, Area a)
@@ -452,6 +485,18 @@ public class RemapSeparatorsOperator extends BaseOperator
                     }
                 });
             }
+        }
+    }
+
+    private void removeSeparator(Area sep)
+    {
+        System.out.println("removing " + sep);
+        if (sep.getId() == 1027)
+            System.out.println("jo!");
+        Area parent = sep.getParentArea();
+        if (parent != null)
+        {
+            parent.removeChild(sep);
         }
     }
     
