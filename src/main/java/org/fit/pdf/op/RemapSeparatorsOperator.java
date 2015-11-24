@@ -53,7 +53,6 @@ public class RemapSeparatorsOperator extends BaseOperator
     
     public RemapSeparatorsOperator()
     {
-        covering = new HashMap<Area, List<Area>>();
     }
     
     @Override
@@ -127,6 +126,7 @@ public class RemapSeparatorsOperator extends BaseOperator
     @Override
     public void apply(AreaTree atree, Area root)
     {
+        covering = new HashMap<Area, List<Area>>();
         recursiveMapSeparators((AreaImpl) root);
         sortCoverings();
         for (Area sep : covering.keySet())
@@ -490,14 +490,9 @@ public class RemapSeparatorsOperator extends BaseOperator
 
     private void removeSeparator(Area sep)
     {
-        System.out.println("removing " + sep);
-        if (sep.getId() == 1027)
-            System.out.println("jo!");
-        Area parent = sep.getParentArea();
+        final Area parent = sep.getParentArea();
         if (parent != null)
-        {
             parent.removeChild(sep);
-        }
     }
     
     //==============================================================================
