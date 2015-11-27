@@ -285,7 +285,7 @@ public class RemapSeparatorsOperator extends BaseOperator
     
     private boolean checkCovering(Area sep)
     {
-        System.out.println("SEPARATOR " + sep);
+        //System.out.println("SEPARATOR " + sep);
         List<Area> areas = covering.get(sep);
         if (areas != null && !areas.isEmpty())
         {
@@ -298,7 +298,6 @@ public class RemapSeparatorsOperator extends BaseOperator
                     final int next = a.getY1();
                     if (next > max)
                     {
-                        System.out.println("  Uncovered Y: " + max + ".." + next);
                         uncover += next - max;
                     }
                     coverVerticalSeparator(sep, a);
@@ -314,7 +313,6 @@ public class RemapSeparatorsOperator extends BaseOperator
                     final int next = a.getX1();
                     if (next > max)
                     {
-                        System.out.println("  Uncovered X: " + max + ".." + next);
                         uncover += next - max;
                     }
                     coverHorizontalSeparator(sep, a);
@@ -326,7 +324,7 @@ public class RemapSeparatorsOperator extends BaseOperator
         }
         else
         {
-            System.out.println("  NOT covered at all");
+            //System.out.println("  NOT covered at all");
             return false; 
         }
     }
