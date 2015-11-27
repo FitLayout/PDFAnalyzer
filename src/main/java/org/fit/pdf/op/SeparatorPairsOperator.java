@@ -72,9 +72,9 @@ public class SeparatorPairsOperator extends BaseOperator
     public void apply(AreaTree atree, Area root)
     {
         List<SepPair> pairs = findSeparatorPairs(root);
-        /*System.out.println("Sep pairs:");
+        System.out.println("Sep pairs:");
         for (SepPair pair : pairs)
-            System.out.println("  " + pair);*/
+            System.out.println("  " + pair);
         /*System.out.println("Incomplete:");
         for (SepPair pair : pairs)
             if (!pair.isComplete())
@@ -99,7 +99,12 @@ public class SeparatorPairsOperator extends BaseOperator
             //try to complete an existing pair
             final List<SepPair> expairs = findPairsFor(root, pairs);
             for (SepPair expair : expairs)
-                expair.addPair(root);
+            {
+                //expair.addPair(root);
+                SepPair copy = new SepPair(expair.s1);
+                copy.addPair(root);
+                pairs.add(copy);
+            }
             //and create a new one
             pairs.add(new SepPair(root));
         }
@@ -129,11 +134,7 @@ public class SeparatorPairsOperator extends BaseOperator
                 final int dist = pair.candidateDistance(sep);
                 if (dist == mindist && !pair.isComplete())
                 {
-                    mindist = dist;
-                    if (!pair.isComplete())
-                        cand.add(pair);
-                    else
-                        cand.add(new SepPair(pair.s1));
+                    cand.add(pair);
                 }
             }
         }
