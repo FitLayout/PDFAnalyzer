@@ -23,6 +23,11 @@ public class SeparatorPairsOperator extends BaseOperator
 {
     private static Logger log = LoggerFactory.getLogger(SeparatorPairsOperator.class);
     
+    private final static short TOP = 0;
+    private final static short RIGHT = 1;
+    private final static short BOTTOM = 2;
+    private final static short LEFT = 3;
+ 
     protected final String[] paramNames = { };
     protected final ValueType[] paramTypes = { };
     
@@ -79,7 +84,8 @@ public class SeparatorPairsOperator extends BaseOperator
         for (SepPair pair : pairs)
             if (!pair.isComplete())
                 System.out.println("  " + pair);*/
-        createAreasFromPairs(pairs);
+        List<Area> newAreas = createAreasFromPairs(pairs);
+        while (findJoinableAreas(newAreas)) { }
     }
     
     //==============================================================================
@@ -143,8 +149,9 @@ public class SeparatorPairsOperator extends BaseOperator
     
     //==============================================================================
     
-    private void createAreasFromPairs(List<SepPair> pairs)
+    private List<Area> createAreasFromPairs(List<SepPair> pairs)
     {
+        List<Area> ret = new Vector<Area>();
         for (SepPair pair : pairs)
         {
             //scan the horizontal separators
@@ -185,12 +192,14 @@ public class SeparatorPairsOperator extends BaseOperator
                             cbounds.copy(cbounds.intersection(areabounds));
                         }
                     }
-                    parent.createSuperArea(areagp, selected, "seps");
+                    Area newArea = parent.createSuperArea(areagp, selected, "seps");
+                    ret.add(newArea);
                 }
                 else
                     log.error("Separator pair {} has no common parent", pair);
             }
         }
+        return ret;
     }
     
     private Area findCommonParent(Area a1, Area a2)
@@ -250,7 +259,69 @@ public class SeparatorPairsOperator extends BaseOperator
     
     //==============================================================================
     
+    /**
+     * Tries to find non-separated neighboring areas that may be joined
+     * and joins them.
+     * @param areas The list of areas to process.
+     * @return {@code true} when some change has been performed
+     */
+    private boolean findJoinableAreas(List<Area> areas)
+    {
+        final int[] dirs = { RIGHT, BOTTOM };
+        for (Area curArea : areas)
+        {
+            List<Area> siblings = curArea.getParentArea().getChildAreas();
+            for (int di = 0; di < 2; di++)
+            {
+                Area cand = findNeighbor(curArea, siblings, dirs[di], 0);
+                if (cand == null)
+                    cand = findNeighbor(curArea, siblings, dirs[di], 1);
+                if (cand != null && !cand.isSeparator() && areas.contains(cand)) //candidate found: join
+                {
+                    //join the areas
+                    curArea.getBounds().expandToEnclose(cand.getBounds());
+                    curArea.appendChildren(cand.getChildAreas());
+                    cand.getParentArea().removeChild(cand);
+                    areas.remove(cand);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
     
+    private Area findNeighbor(Area area, List<Area> list, int dir, int dist)
+    {
+        if (area.getId() == 1240)
+            System.out.println("jo!");
+        final Rectangular ab = area.getBounds();
+        //where do we search the candidate?
+        int wx = 0, wy = 0;
+        switch (dir)
+        {
+            case TOP:
+                wx = ab.midX(); wy = ab.getY1() - dist;
+                break;
+            case RIGHT:
+                wx = ab.getX2() + dist; wy = ab.midY();
+                break;
+            case BOTTOM:
+                wx = ab.midX(); wy = ab.getY2() + dist;
+                break;
+            case LEFT:
+                wx = ab.getX1() - dist; wy = ab.midY();
+                break;
+        }
+        //look for the candidate
+        for (Area cur : list)
+        {
+            if (cur != area && cur.getBounds().contains(wx, wy))
+                return cur;
+        }
+        return null;
+    }
+    
+    //==============================================================================
     
     private class SepPair
     {
