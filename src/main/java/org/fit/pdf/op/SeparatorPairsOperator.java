@@ -192,7 +192,7 @@ public class SeparatorPairsOperator extends BaseOperator
                             cbounds.copy(cbounds.intersection(areabounds));
                         }
                     }
-                    Area newArea = parent.createSuperArea(areagp, selected, "seps");
+                    Area newArea = parent.createSuperArea(areagp, selected, "<areaS>");
                     ret.add(newArea);
                 }
                 else
