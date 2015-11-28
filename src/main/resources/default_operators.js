@@ -11,10 +11,13 @@ proc.apply('FitLayout.Segm.SortByLines', {});
 //proc.apply('FitLayout.Segm.SuperAreas', {depthLimit: 1});
 proc.apply('FitLayout.Pdf.NormalizeSeparators', { });
 proc.apply('FitLayout.Pdf.SeparatorPairs', { });
-//proc.apply('FitLayout.Pdf.RemapSeparators', { maxEmDistX: 0.5, maxEmDistY: 0.3 });
-//proc.apply('FitLayout.Segm.SortByLines', {});
+proc.apply('FitLayout.Segm.SortByLines', {});
+proc.apply('FitLayout.Segm.FindLines', {useConsistentStyle: true, maxLineEmSpace: 1.5});
 
-//proc.apply('FitLayout.Logical.LayoutSplit', {});
+proc.apply('FitLayout.Pdf.RemapSeparators', { maxEmDistX: 0.5, maxEmDistY: 0.3 });
+proc.apply('FitLayout.Logical.LayoutSplit', {});
+
+
 
 
 //proc.apply('FitLayout.Tag.Entities', {});

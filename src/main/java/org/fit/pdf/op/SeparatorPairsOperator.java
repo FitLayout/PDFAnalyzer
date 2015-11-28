@@ -292,8 +292,6 @@ public class SeparatorPairsOperator extends BaseOperator
     
     private Area findNeighbor(Area area, List<Area> list, int dir, int dist)
     {
-        if (area.getId() == 1240)
-            System.out.println("jo!");
         final Rectangular ab = area.getBounds();
         //where do we search the candidate?
         int wx = 0, wy = 0;
