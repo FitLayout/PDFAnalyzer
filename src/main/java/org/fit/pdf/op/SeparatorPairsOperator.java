@@ -185,7 +185,7 @@ public class SeparatorPairsOperator extends BaseOperator
                     {
                         final Area child = parent.getChildArea(i);
                         final Rectangular cbounds = child.getBounds(); 
-                        if (isBetweenSeparators(areabounds, cbounds) && !child.isSeparator())
+                        if (isBetweenSeparators(areabounds, cbounds, child.isSeparator()))
                         {
                             selected.add(child);
                             //crop the child to the area bounds
@@ -210,18 +210,29 @@ public class SeparatorPairsOperator extends BaseOperator
             return null;
     }
     
-    private boolean isBetweenSeparators(Rectangular sepBounds, Rectangular childBounds)
+    private boolean isBetweenSeparators(Rectangular sepBounds, Rectangular childBounds, boolean isSep)
     {
-        if (sepBounds.encloses(childBounds))
+        if (!isSep) //not a separator, allow partial overlaps
         {
-            //child entirely between separators
-            return true;
+            if (sepBounds.encloses(childBounds))
+            {
+                //child entirely between separators
+                return true;
+            }
+            else
+            {
+                //at least half of the child between separators
+                Rectangular intr = sepBounds.intersection(childBounds);
+                return (intr.getArea() > childBounds.getArea() / 2);
+            }
         }
-        else
+        else //a separator - must be fully inside
         {
-            //at least half of the child between separators
-            Rectangular intr = sepBounds.intersection(childBounds);
-            return (intr.getArea() > childBounds.getArea() / 2);
+            Rectangular inner = new Rectangular(sepBounds.getX1() + 1,
+                                                sepBounds.getY1() + 1,
+                                                sepBounds.getX2() - 1,
+                                                sepBounds.getY2() - 1);
+            return inner.encloses(childBounds);
         }
     }
     
