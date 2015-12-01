@@ -161,10 +161,10 @@ public class SeparatorPairsOperator extends BaseOperator
                 if (parent != null)
                 {
                     //minimal area given by the separatos (when not aligned)
-                    Rectangular areagp = pair.getMinAreaGP();
+                    Rectangular areagp = pair.getMinAreaGP(); 
                     Rectangular areabounds = pair.getMinArea();
                     //check for a matching vertical pair
-                    SepPair vpair = findMatchingVerticalPair(pairs, pair);
+                    SepPair vpair = findMatchingCompleteVerticalPair(pairs, pair);
                     if (vpair != null)
                     {
                         final Rectangular vgp = vpair.getMinAreaGP();
@@ -179,21 +179,47 @@ public class SeparatorPairsOperator extends BaseOperator
                         if (vbounds.getX2() < areabounds.getX2())
                             areabounds.setX2(vbounds.getX2());
                     }
-                    //find the areas inside
-                    Vector<Area> selected = new Vector<Area>();
-                    for (int i = 0; i < parent.getChildCount(); i++)
+                    else //no complete matching pair found, try an incomplete one on the left or right
                     {
-                        final Area child = parent.getChildArea(i);
-                        final Rectangular cbounds = child.getBounds(); 
-                        if (isBetweenSeparators(areabounds, cbounds, child.isSeparator()))
+                        vpair = findMathingIncompleteVerticalPairLeft(pairs, pair);
+                        if (vpair != null)
                         {
-                            selected.add(child);
-                            //crop the child to the area bounds
-                            cbounds.copy(cbounds.intersection(areabounds));
+                            final Rectangular vgp = vpair.s1.getTopology().getPosition();
+                            if (vgp.getX1() + 1 > areagp.getX1())
+                                areagp.setX1(vgp.getX1() + 1);
+                            final Rectangular vbounds = vpair.s1.getBounds();
+                            if (vbounds.getX1() + 1 > areabounds.getX1())
+                                areabounds.setX1(vbounds.getX1() + 1);
+                        }
+                        vpair = findMathingIncompleteVerticalPairRight(pairs, pair);
+                        if (vpair != null)
+                        {
+                            final Rectangular vgp = vpair.s1.getTopology().getPosition();
+                            if (vgp.getX2() - 1 < areagp.getX2())
+                                areagp.setX2(vgp.getX2() - 1);
+                            final Rectangular vbounds = vpair.s1.getBounds();
+                            if (vbounds.getX2() - 1 < areabounds.getX2())
+                                areabounds.setX2(vbounds.getX2() - 1);
                         }
                     }
-                    Area newArea = parent.createSuperArea(areagp, selected, "<areaS>");
-                    ret.add(newArea);
+                    //find the areas inside
+                    if (areabounds.getWidth() > 0 && areabounds.getHeight() > 0) //if the discovered area is not zero-sized
+                    {
+                        Vector<Area> selected = new Vector<Area>();
+                        for (int i = 0; i < parent.getChildCount(); i++)
+                        {
+                            final Area child = parent.getChildArea(i);
+                            final Rectangular cbounds = child.getBounds(); 
+                            if (isBetweenSeparators(areabounds, cbounds, child.isSeparator()))
+                            {
+                                selected.add(child);
+                                //crop the child to the area bounds
+                                cbounds.copy(cbounds.intersection(areabounds));
+                            }
+                        }
+                        Area newArea = parent.createSuperArea(areagp, selected, "<areaS>");
+                        ret.add(newArea);
+                    }
                 }
                 else
                     log.error("Separator pair {} has no common parent", pair);
@@ -236,7 +262,7 @@ public class SeparatorPairsOperator extends BaseOperator
         }
     }
     
-    private SepPair findMatchingVerticalPair(List<SepPair> pairs, SepPair hpair)
+    private SepPair findMatchingCompleteVerticalPair(List<SepPair> pairs, SepPair hpair)
     {
         final Rectangular hgp = hpair.getMinArea();
         //find the pair with the largest overlapping area
@@ -268,6 +294,37 @@ public class SeparatorPairsOperator extends BaseOperator
         return cand;
     }
     
+    private SepPair findMathingIncompleteVerticalPairLeft(List<SepPair> pairs, SepPair hpair)
+    {
+        final Rectangular hgp = hpair.getMinArea();
+        final int leftEdge = hgp.getX1();
+        for (SepPair vpair : pairs)
+        {
+            if (!vpair.isComplete() && vpair.isVertical())
+            {
+                final Rectangular vgp = vpair.s1.getBounds();
+                if (vgp.getX1() <= leftEdge && vgp.getX2() >= leftEdge)
+                    return vpair;
+            }
+        }
+        return null;
+    }
+    
+    private SepPair findMathingIncompleteVerticalPairRight(List<SepPair> pairs, SepPair hpair)
+    {
+        final Rectangular hgp = hpair.getMinArea();
+        final int rightEdge = hgp.getX2();
+        for (SepPair vpair : pairs)
+        {
+            if (!vpair.isComplete() && vpair.isVertical())
+            {
+                final Rectangular vgp = vpair.s1.getBounds();
+                if (vgp.getX1() <= rightEdge && vgp.getX2() >= rightEdge)
+                    return vpair;
+            }
+        }
+        return null;
+    }
     //==============================================================================
     
     /**
