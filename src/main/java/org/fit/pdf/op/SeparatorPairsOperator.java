@@ -303,7 +303,8 @@ public class SeparatorPairsOperator extends BaseOperator
             if (!vpair.isComplete() && vpair.isVertical())
             {
                 final Rectangular vgp = vpair.s1.getBounds();
-                if (vgp.getX1() <= leftEdge && vgp.getX2() >= leftEdge)
+                if (vgp.getX1() <= leftEdge && vgp.getX2() >= leftEdge
+                        && vgp.intersectsY(hgp))
                     return vpair;
             }
         }
@@ -319,7 +320,8 @@ public class SeparatorPairsOperator extends BaseOperator
             if (!vpair.isComplete() && vpair.isVertical())
             {
                 final Rectangular vgp = vpair.s1.getBounds();
-                if (vgp.getX1() <= rightEdge && vgp.getX2() >= rightEdge)
+                if (vgp.getX1() <= rightEdge && vgp.getX2() >= rightEdge
+                        && vgp.intersectsY(hgp))
                     return vpair;
             }
         }
