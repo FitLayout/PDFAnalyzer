@@ -1,5 +1,5 @@
-PDF Analsis Tools
-=================
+PDF Analysis Tools
+==================
 (c) 2015 Radek Burget (burgetr@fit.vutbr.cz)
 
 PDF Analysis Tools provide a set of utilities for advanced PDF document analysis. Unlike
@@ -8,7 +8,7 @@ that focus on obtaining a DOM or HTML representation of the document that is *vi
 to the original document, the goal of the PDF Analysis Tools is to produce an output document that has
 the same *logical* stucture.
 
-For this purpose, the tools implement different algorithms for detect ingcommon graphical patterns
+For this purpose, the tools implement different algorithms for detecting common graphical patterns
 in the source PDF document that can be represented by some standard HTML elements and CSS constructions.
 The most important of them include:
 
