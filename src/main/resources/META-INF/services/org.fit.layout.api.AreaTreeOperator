@@ -1,3 +1,4 @@
 org.fit.pdf.op.NormalizeSeparatorsOperator
 org.fit.pdf.op.RemapSeparatorsOperator
 org.fit.pdf.op.SeparatorPairsOperator
+org.fit.pdf.op.HTMLOutputOperator
