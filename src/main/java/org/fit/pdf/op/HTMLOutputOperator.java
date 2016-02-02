@@ -7,7 +7,6 @@ package org.fit.pdf.op;
 
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
-import java.util.Set;
 import java.util.Vector;
 
 import org.fit.layout.impl.BaseOperator;
@@ -16,7 +15,6 @@ import org.fit.layout.model.AreaTree;
 import org.fit.layout.model.Border;
 import org.fit.layout.model.Box;
 import org.fit.layout.model.Rectangular;
-import org.fit.layout.model.Tag;
 import org.fit.pdf.PdfArea;
 
 /**
@@ -133,6 +131,7 @@ public class HTMLOutputOperator extends BaseOperator
             out.println("<html>");
             out.println("<head>");
             out.println("<title>" + tree.getRoot().getPage().getTitle() + "</title>");
+            out.println("<meta charset=\"utf-8\">");
             out.println("</head>");
             out.println("<body>");
         }
@@ -202,16 +201,13 @@ public class HTMLOutputOperator extends BaseOperator
         {
             px = parent.getX1();
             py = parent.getY1();
-            if (parent instanceof PdfArea)
-            {
-                final PdfArea pa = (PdfArea) parent;
-                Border bleft = pa.getBorderStyle(Border.Side.LEFT);
-                if (bleft != null)
-                    px += bleft.getWidth();
-                Border btop = pa.getBorderStyle(Border.Side.TOP);
-                if (btop != null)
-                    py += btop.getWidth();
-            }
+            
+            Border bleft = parent.getBorderStyle(Border.Side.LEFT);
+            if (bleft != null)
+                px += bleft.getWidth();
+            Border btop = parent.getBorderStyle(Border.Side.TOP);
+            if (btop != null)
+                py += btop.getWidth();
         }
             
         StringBuilder style = new StringBuilder("position:absolute;");
@@ -300,14 +296,6 @@ public class HTMLOutputOperator extends BaseOperator
         }
         else
             return spec;
-    }
-    
-    private String tagString(Set<Tag> tags)
-    {
-        String ret = "";
-        for (Tag tag : tags)
-            ret += tag + " ";
-        return ret.trim();
     }
     
     private String HTMLEntities(String s)
