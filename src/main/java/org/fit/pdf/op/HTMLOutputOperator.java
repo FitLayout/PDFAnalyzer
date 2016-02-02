@@ -17,7 +17,6 @@ import org.fit.layout.model.AreaTree;
 import org.fit.layout.model.Border;
 import org.fit.layout.model.Box;
 import org.fit.layout.model.Rectangular;
-import org.fit.pdf.PdfArea;
 
 /**
  * This operator serializes the area tree to an HTML file.
@@ -224,6 +223,12 @@ public class HTMLOutputOperator extends BaseOperator
         String bgcol = colorString(a.getBackgroundColor());
         if (!bgcol.isEmpty())
             style.put("background", bgcol);
+        for (Border.Side side : Border.Side.values())
+        {
+            String brd = getBorderStyle(a.getBorderStyle(side));
+            if (!brd.isEmpty())
+                style.put("border-" + side.toString(), brd);
+        }
         
         return style.toString();
     }
@@ -234,14 +239,8 @@ public class HTMLOutputOperator extends BaseOperator
         int py = 0;
         if (parent != null)
         {
-            px = parent.getX1();
-            py = parent.getY1();
-            if (parent instanceof PdfArea)
-            {
-                final PdfArea pa = (PdfArea) parent;
-                px += pa.getBorderStyle(Border.Side.LEFT).getWidth();
-                py += pa.getBorderStyle(Border.Side.TOP).getWidth();
-            }
+            px = parent.getX1() + parent.getBorderStyle(Border.Side.LEFT).getWidth();
+            py = parent.getY1() + parent.getBorderStyle(Border.Side.TOP).getWidth();
         }
             
         Rectangular pos = box.getVisualBounds();
@@ -262,8 +261,28 @@ public class HTMLOutputOperator extends BaseOperator
         if (deco.isEmpty())
             deco = "none";
         style.put("text-decoration", deco);
+        for (Border.Side side : Border.Side.values())
+        {
+            String brd = getBorderStyle(box.getBorderStyle(side));
+            if (!brd.isEmpty())
+                style.put("border-" + side.toString(), brd);
+        }
         
         return style.toString();
+    }
+    
+    private String getBorderStyle(Border border)
+    {
+        if (border != null && border.getStyle() != Border.Style.NONE && border.getWidth() > 0)
+        {
+            StringBuilder ret = new StringBuilder();
+            ret.append(border.getWidth()).append(UNIT);
+            ret.append(' ').append(border.getStyle().toString());
+            ret.append(' ').append(colorString(border.getColor()));
+            return ret.toString();
+        }
+        else
+            return "";
     }
     
     private void indent(int level, java.io.PrintWriter p)
