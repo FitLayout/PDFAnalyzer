@@ -7,6 +7,8 @@ package org.fit.pdf.op;
 
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Vector;
 
 import org.fit.layout.impl.BaseOperator;
@@ -24,6 +26,9 @@ import org.fit.pdf.PdfArea;
  */
 public class HTMLOutputOperator extends BaseOperator
 {
+    /** Default length unit */
+    protected static final String UNIT = "px";
+    
     /** Should we produce the HTML header and footer? */
     protected boolean produceHeader;
     
@@ -210,14 +215,15 @@ public class HTMLOutputOperator extends BaseOperator
                 py += btop.getWidth();
         }
             
-        StringBuilder style = new StringBuilder("position:absolute;");
-        style.append("left:").append(a.getX1() - px).append("px;");
-        style.append("top:").append(a.getY1() - py).append("px;");
-        style.append("width:").append(a.getWidth()).append("px;");
-        style.append("height:").append(a.getHeight()).append("px;");
+        Style style = new Style();
+        style.put("position", "absolute");
+        style.put("left", a.getX1() - px, UNIT);
+        style.put("top", a.getY1() - py, UNIT);
+        style.put("width", a.getWidth(), UNIT);
+        style.put("height", a.getHeight(), UNIT);
         String bgcol = colorString(a.getBackgroundColor());
         if (!bgcol.isEmpty())
-            style.append("background:").append(bgcol).append(';');
+            style.put("background", bgcol);
         
         return style.toString();
     }
@@ -239,14 +245,15 @@ public class HTMLOutputOperator extends BaseOperator
         }
             
         Rectangular pos = box.getVisualBounds();
-        StringBuilder style = new StringBuilder("position:absolute;");
-        style.append("top:").append(pos.getY1() - py).append("px;");
-        style.append("left:").append(pos.getX1() - px).append("px;");
-        style.append("color:").append(colorString(box.getColor())).append(';');
-        style.append("font-family:'").append(box.getFontFamily()).append("';");
-        style.append("font-size:").append(box.getFontSize()).append("px;");
-        style.append("font-weight:").append((box.getFontWeight() < 0.5f)?"normal":"bold").append(";");
-        style.append("font-style:").append((box.getFontStyle() < 0.5f)?"normal":"italic").append(";");
+        Style style = new Style();
+        style.put("position", "absolute");
+        style.put("top", (pos.getY1() - py), UNIT);
+        style.put("left", (pos.getX1() - px), UNIT);
+        style.put("color", (colorString(box.getColor())));
+        style.put("font-family", box.getFontFamily());
+        style.put("font-size", box.getFontSize(), UNIT);
+        style.put("font-weight", ((box.getFontWeight() < 0.5f)?"normal":"bold"));
+        style.put("font-style", ((box.getFontStyle() < 0.5f)?"normal":"italic"));
         String deco = "";
         if (box.getUnderline() >= 0.5f)
             deco += "underline";
@@ -254,7 +261,7 @@ public class HTMLOutputOperator extends BaseOperator
             deco += " line-through";
         if (deco.isEmpty())
             deco = "none";
-        style.append("text-decoration:").append(deco).append(';');
+        style.put("text-decoration", deco);
         
         return style.toString();
     }
@@ -303,5 +310,36 @@ public class HTMLOutputOperator extends BaseOperator
         return s.replaceAll(">", "&gt;").replaceAll("<", "&lt;").replaceAll("&", "&amp;");
     }
     
+    /**
+     * Element style representation.
+     * 
+     * @author burgetr
+     */
+    protected class Style extends HashMap<String, String>
+    {
+        private static final long serialVersionUID = 1L;
+        
+        public void put(String key, int value, String unit)
+        {
+            put(key, value + unit);
+        }
+        
+        public void put(String key, float value, String unit)
+        {
+            put(key, value + unit);
+        }
+        
+        @Override
+        public String toString()
+        {
+            StringBuilder ret = new StringBuilder();
+            for (Map.Entry<String, String> entry : entrySet())
+            {
+                ret.append(entry.getKey()).append(':').append(entry.getValue()).append(';');
+            }
+            return ret.toString();
+        }
+        
+    }
 
 }
