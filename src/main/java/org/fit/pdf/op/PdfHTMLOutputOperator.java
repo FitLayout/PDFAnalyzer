@@ -25,7 +25,7 @@ public class PdfHTMLOutputOperator extends HTMLOutputOperator
 
     public PdfHTMLOutputOperator(String filename, boolean produceHeader)
     {
-        super(filename, produceHeader);
+        super(filename, produceHeader, false);
     }
 
     @Override
