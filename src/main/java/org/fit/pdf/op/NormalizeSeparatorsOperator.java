@@ -47,6 +47,12 @@ public class NormalizeSeparatorsOperator extends BaseOperator
     }
 
     @Override
+    public String getCategory()
+    {
+        return "pdf";
+    }
+
+    @Override
     public String[] getParamNames()
     {
         return paramNames;
