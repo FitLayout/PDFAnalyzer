@@ -21,8 +21,6 @@ import org.fit.layout.model.Rectangular;
  */
 public class NormalizeSeparatorsOperator extends BaseOperator
 {
-    protected final String[] paramNames = { };
-    protected final ValueType[] paramTypes = { };
     
     public NormalizeSeparatorsOperator()
     {
@@ -52,18 +50,6 @@ public class NormalizeSeparatorsOperator extends BaseOperator
         return "pdf";
     }
 
-    @Override
-    public String[] getParamNames()
-    {
-        return paramNames;
-    }
-
-    @Override
-    public ValueType[] getParamTypes()
-    {
-        return paramTypes;
-    }
-    
     //==============================================================================
 
     @Override

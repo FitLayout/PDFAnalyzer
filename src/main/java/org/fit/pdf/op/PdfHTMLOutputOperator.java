@@ -5,6 +5,12 @@
  */
 package org.fit.pdf.op;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.fit.layout.api.Parameter;
+import org.fit.layout.impl.ParameterBoolean;
+import org.fit.layout.impl.ParameterString;
 import org.fit.layout.tools.io.HTMLOutputOperator;
 
 /**
@@ -15,8 +21,6 @@ import org.fit.layout.tools.io.HTMLOutputOperator;
  */
 public class PdfHTMLOutputOperator extends HTMLOutputOperator
 {
-    protected final String[] paramNames = { "filename", "produceHeader" };
-    protected final ValueType[] paramTypes = { ValueType.STRING, ValueType.BOOLEAN };
     
     public PdfHTMLOutputOperator()
     {
@@ -35,17 +39,14 @@ public class PdfHTMLOutputOperator extends HTMLOutputOperator
     }
 
     @Override
-    public String[] getParamNames()
+    public List<Parameter> defineParams()
     {
-        return paramNames;
+        List<Parameter> ret = new ArrayList<>(2);
+        ret.add(new ParameterString("filename"));
+        ret.add(new ParameterBoolean("produceHeader"));
+        return ret;
     }
-
-    @Override
-    public ValueType[] getParamTypes()
-    {
-        return paramTypes;
-    }
-
+    
     //=====================================================================================================
     
     

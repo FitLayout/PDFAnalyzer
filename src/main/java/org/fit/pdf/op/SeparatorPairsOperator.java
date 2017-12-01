@@ -28,9 +28,6 @@ public class SeparatorPairsOperator extends BaseOperator
     private final static short BOTTOM = 2;
     private final static short LEFT = 3;
  
-    protected final String[] paramNames = { };
-    protected final ValueType[] paramTypes = { };
-    
     public SeparatorPairsOperator()
     {
     }
@@ -59,18 +56,6 @@ public class SeparatorPairsOperator extends BaseOperator
         return "pdf";
     }
 
-    @Override
-    public String[] getParamNames()
-    {
-        return paramNames;
-    }
-
-    @Override
-    public ValueType[] getParamTypes()
-    {
-        return paramTypes;
-    }
-    
     //==============================================================================
 
     @Override

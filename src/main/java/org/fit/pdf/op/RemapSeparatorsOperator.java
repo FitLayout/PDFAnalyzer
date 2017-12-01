@@ -5,6 +5,7 @@
  */
 package org.fit.pdf.op;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -12,8 +13,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
+import org.fit.layout.api.Parameter;
 import org.fit.layout.impl.AreaGrid;
 import org.fit.layout.impl.BaseOperator;
+import org.fit.layout.impl.ParameterBoolean;
+import org.fit.layout.impl.ParameterFloat;
 import org.fit.layout.model.Area;
 import org.fit.layout.model.AreaTree;
 import org.fit.layout.model.Border;
@@ -33,9 +37,6 @@ import org.slf4j.LoggerFactory;
 public class RemapSeparatorsOperator extends BaseOperator
 {
     private static Logger log = LoggerFactory.getLogger(RemapSeparatorsOperator.class);
-    
-    protected final String[] paramNames = { "maxEmDistX", "maxEmDistY", "removeMapped" };
-    protected final ValueType[] paramTypes = { ValueType.FLOAT, ValueType.FLOAT, ValueType.BOOLEAN };
     
     private final static short TOP = 0;
     private final static short RIGHT = 1;
@@ -80,15 +81,13 @@ public class RemapSeparatorsOperator extends BaseOperator
     }
 
     @Override
-    public String[] getParamNames()
+    public List<Parameter> defineParams()
     {
-        return paramNames;
-    }
-
-    @Override
-    public ValueType[] getParamTypes()
-    {
-        return paramTypes;
+        List<Parameter> ret = new ArrayList<>(3);
+        ret.add(new ParameterFloat("maxEmDistX"));
+        ret.add(new ParameterFloat("maxEmDistY"));
+        ret.add(new ParameterBoolean("removeMapped"));
+        return ret;
     }
     
     public float getMaxEmDistX()
