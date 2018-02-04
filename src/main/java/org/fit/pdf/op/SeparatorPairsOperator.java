@@ -10,6 +10,7 @@ import java.util.Vector;
 
 import org.fit.layout.impl.BaseOperator;
 import org.fit.layout.model.Area;
+import org.fit.layout.model.AreaTopology;
 import org.fit.layout.model.AreaTree;
 import org.fit.layout.model.Rectangular;
 import org.slf4j.Logger;
@@ -152,13 +153,13 @@ public class SeparatorPairsOperator extends BaseOperator
                 if (parent != null)
                 {
                     //minimal area given by the separatos (when not aligned)
-                    Rectangular areagp = pair.getMinAreaGP(); 
+                    Rectangular areagp = pair.getMinAreaGP(parent.getTopology()); 
                     Rectangular areabounds = pair.getMinArea();
                     //check for a matching vertical pair
                     SepPair vpair = findMatchingCompleteVerticalPair(pairs, pair);
                     if (vpair != null)
                     {
-                        final Rectangular vgp = vpair.getMinAreaGP();
+                        final Rectangular vgp = vpair.getMinAreaGP(parent.getTopology());
                         if (vgp.getX1() > areagp.getX1())
                             areagp.setX1(vgp.getX1());
                         if (vgp.getX2() < areagp.getX2())
@@ -175,7 +176,7 @@ public class SeparatorPairsOperator extends BaseOperator
                         vpair = findMathingIncompleteVerticalPairLeft(pairs, pair);
                         if (vpair != null)
                         {
-                            final Rectangular vgp = vpair.s1.getTopology().getPosition();
+                            final Rectangular vgp = parent.getTopology().getPosition(vpair.s1);
                             if (vgp.getX1() + 1 > areagp.getX1())
                                 areagp.setX1(vgp.getX1() + 1);
                             final Rectangular vbounds = vpair.s1.getBounds();
@@ -185,7 +186,7 @@ public class SeparatorPairsOperator extends BaseOperator
                         vpair = findMathingIncompleteVerticalPairRight(pairs, pair);
                         if (vpair != null)
                         {
-                            final Rectangular vgp = vpair.s1.getTopology().getPosition();
+                            final Rectangular vgp = parent.getTopology().getPosition(vpair.s1);
                             if (vgp.getX2() - 1 < areagp.getX2())
                                 areagp.setX2(vgp.getX2() - 1);
                             final Rectangular vbounds = vpair.s1.getBounds();
@@ -450,10 +451,10 @@ public class SeparatorPairsOperator extends BaseOperator
          * When the separators are not aligned, the minimal area is returned determined by the seam length.
          * @return
          */
-        public Rectangular getMinAreaGP()
+        public Rectangular getMinAreaGP(AreaTopology topology)
         {
-            final Rectangular sgp1 = s1.getTopology().getPosition();
-            final Rectangular sgp2 = s2.getTopology().getPosition();
+            final Rectangular sgp1 = topology.getPosition(s1);
+            final Rectangular sgp2 = topology.getPosition(s2);
             if (s1.isHorizontalSeparator())
                 return new Rectangular(Math.max(sgp1.getX1(), sgp2.getX1()), sgp1.getY2() + 1,
                                        Math.min(sgp1.getX2(), sgp2.getX2()), sgp2.getY1() - 1);
